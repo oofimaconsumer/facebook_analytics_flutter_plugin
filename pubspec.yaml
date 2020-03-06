@@ -1,7 +1,7 @@
 name: facebook_analytics_plugin
 description: A Flutter plugin implementing Facebook analytics logging functionalities and more
-version: 0.0.2+2
-author: Khalit Hartmann <khalithartmann@gmail.com>, Timur Ganiev
+version: 0.0.2+3
+author: Khalit Hartmann <khalithartmann@gmail.com>, Timur Ganiev <oofimaconsumer@gmail.com>
 homepage: https://github.com/oofimaconsumer
 
 environment:
