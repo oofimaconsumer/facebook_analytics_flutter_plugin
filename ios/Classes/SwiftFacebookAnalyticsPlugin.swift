@@ -3,39 +3,69 @@ import UIKit
 import FBSDKCoreKit
 
 
-
-
-
 public class SwiftFacebookAnalyticsPlugin: NSObject, FlutterPlugin {
     
-  public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "facebook_analytics_plugin", binaryMessenger: registrar.messenger())
-    let instance = SwiftFacebookAnalyticsPlugin()
-    registrar.addMethodCallDelegate(instance, channel: channel)
+    // MARK - Public
     
-  }
+    // MARK Overrides
+    
+    public static func register(with registrar: FlutterPluginRegistrar) {
+        let channel = FlutterMethodChannel(name: "facebook_analytics_plugin", binaryMessenger: registrar.messenger())
+        let instance = SwiftFacebookAnalyticsPlugin()
+        registrar.addMethodCallDelegate(instance, channel: channel)
+    }
 
-  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    handleLogEvent(call: call, result: result)
-    result(nil)
+    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        switch call.method {
+        case "logCustomEvent":
+            handleLogEvent(with: call)
+            result(nil)
+        case "logCompletedRegistration":
+            logCompletedRegistration()
+            result(nil)
+        case "logCompletedPurchase":
+            logCompletedPurchase(with: call)
+            result(nil)
+        case "setUserData":
+            setAndHash(with: call)
+            result(nil)
+        default:
+            result(FlutterMethodNotImplemented)
+        }
+    }
     
-  }
-  
-  
-    func handleLogEvent(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    // MARK - Private
+    
+    // MARK Log handlers
+    
+    fileprivate func handleLogEvent(with call: FlutterMethodCall) {
         let parameters = call.arguments as! [String:Any]
         let eventName = parameters["name"] as! String
-        
-        if var optionalParams = parameters["parameters"] as? [String:Any] {
+        if let optionalParams = parameters["parameters"] as? [String:Any] {
             optionalParams = serializeParameterDict(paramDict: optionalParams)
             AppEvents.logEvent(AppEvents.Name(eventName), parameters: optionalParams)
         } else {
             AppEvents.logEvent(AppEvents.Name(eventName))
         }
-        
     }
     
-    func serializeParameterDict(paramDict: [String:Any]) -> [String:Any] {
+    fileprivate func logCompletedRegistration() {
+        AppEvents.logEvent(AppEvents.Name(eventName))
+    }
+    
+    fileprivate func logCompletedPurchase(with call: FlutterMethodCall) {
+        guard let parameters = call.arguments as? [String : Any], let amount = parameters["amount"] as? Double, let currency = parameters["currency"] as? String else { return }
+        AppEvents.logPurchase(amount, currency: currency)
+    }
+    
+    fileprivate func setAndHash(with call: FlutterMethodCall) {
+        guard let parameters = call.arguments as? [String : String] else { return }
+        AppEvents.setUser(email: parameters["email"], firstName: parameters["firstName"], lastName: parameters["lastName"], phone: parameters["phone"], dateOfBirth: parameters["dateOfBirth"], gender: parameters["gender"], city: parameters["city"], state: parameters["state"], zip: parameters["zip"], country: parameters["country"])
+    }
+    
+    // MARK Helpers
+
+    fileprivate func serializeParameterDict(paramDict: [String:Any]) -> [String:Any] {
         var convertedParams : [String :Any] = [:]
         for (key, val ) in paramDict {
             switch val {
@@ -54,11 +84,8 @@ public class SwiftFacebookAnalyticsPlugin: NSObject, FlutterPlugin {
                 default:
                     print("Type not supported: ")
                     print(type(of: val))
-                }
-         
-            
             }
-           return convertedParams
         }
-    
+        return convertedParams
+    }
 }
