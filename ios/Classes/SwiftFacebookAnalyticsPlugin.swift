@@ -41,7 +41,7 @@ public class SwiftFacebookAnalyticsPlugin: NSObject, FlutterPlugin {
     fileprivate func handleLogEvent(with call: FlutterMethodCall) {
         let parameters = call.arguments as! [String:Any]
         let eventName = parameters["name"] as! String
-        if let optionalParams = parameters["parameters"] as? [String:Any] {
+        if var optionalParams = parameters["parameters"] as? [String:Any] {
             optionalParams = serializeParameterDict(paramDict: optionalParams)
             AppEvents.logEvent(AppEvents.Name(eventName), parameters: optionalParams)
         } else {
@@ -50,7 +50,7 @@ public class SwiftFacebookAnalyticsPlugin: NSObject, FlutterPlugin {
     }
     
     fileprivate func logCompletedRegistration() {
-        AppEvents.logEvent(AppEvents.Name(eventName))
+        AppEvents.logEvent(AppEvents.Name.completedRegistration)
     }
     
     fileprivate func logCompletedPurchase(with call: FlutterMethodCall) {
@@ -59,7 +59,7 @@ public class SwiftFacebookAnalyticsPlugin: NSObject, FlutterPlugin {
     }
     
     fileprivate func setAndHash(with call: FlutterMethodCall) {
-        guard let arguments = call.arguments as? [String : String], let parameters = arguments["parameters"] as? [String : String] else { return }
+        guard let arguments = call.arguments as? [String : [String : String]], let parameters = arguments["parameters"] else { return }
         AppEvents.setUser(email: parameters["email"], firstName: parameters["firstName"], lastName: parameters["lastName"], phone: parameters["phone"], dateOfBirth: parameters["dateOfBirth"], gender: parameters["gender"], city: parameters["city"], state: parameters["state"], zip: parameters["zip"], country: parameters["country"])
     }
     
