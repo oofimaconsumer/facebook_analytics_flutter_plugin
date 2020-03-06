@@ -9,6 +9,8 @@ import com.facebook.appevents.AppEventsLogger;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.math.BigDecimal;
+import java.util.Currency;
 
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -17,10 +19,6 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 
-
-
-
-/** FacebookAnalyticsPlugin */
 public class FacebookAnalyticsPlugin implements MethodCallHandler {
   private final PluginRegistry.Registrar registrar;
   private  final AppEventsLogger appEventsLogger;
@@ -31,74 +29,81 @@ public class FacebookAnalyticsPlugin implements MethodCallHandler {
     FacebookSdk.fullyInitialize();
     System.out.println(FacebookSdk.isInitialized());
     appEventsLogger = AppEventsLogger.newLogger(registrar.context());
-
     if (BuildConfig.DEBUG) {
       FacebookSdk.setIsDebugEnabled(true);
       FacebookSdk.addLoggingBehavior(LoggingBehavior.APP_EVENTS);
     }
-
   }
 
+  // Public
 
-  /** Plugin registration. */
+  // Overrides
+
   public static void registerWith(Registrar registrar) {
-
     final MethodChannel channel = new MethodChannel(registrar.messenger(), "facebook_analytics_plugin");
     channel.setMethodCallHandler(new FacebookAnalyticsPlugin(registrar));
   }
 
-
-
   @Override
   public void onMethodCall(MethodCall call, Result result) {
     switch (call.method){
-      case "logEvent":
-        handleLogEvent(call,result);
+      case "logCustomEvent":
+        handleLogEvent(call);
         result.success(null);
         break;
-      case "EVENT_NAME_ACHIEVED_LEVEL":
-        logAchieveLevelEvent((String) call.arguments);
+      case "logCompletedRegistration":
+        logCompletedRegistration();
+        result.success(null);
+        break;
+      case "logCompletedPurchase":
+        logCompletedPurchase(call);
+        result.success(null);
+        break;
+      case "setUserData":
+        setAndHash(call);
         result.success(null);
         break;
       default:
         result.notImplemented();
-
-
-
     }
 
   }
 
+  // Private
 
+  // Log handlers
 
-  private void handleLogEvent(MethodCall call, Result result) {
-    Map<String,Object> parameters =  call.argument("parameters");
+  private void handleLogEvent(MethodCall call) {
+    Map<String,Object> parameters = call.argument("parameters");
     String eventName = call.argument("name");
-
     if (parameters == null || parameters.isEmpty()) {
       appEventsLogger.logEvent(eventName);
+    } else {
+      Bundle bundleParams = createBundleFromMap(parameters);
+      appEventsLogger.logEvent(eventName, bundleParams);
     }
-
-    Bundle bundleParams = createBundleFromMap(parameters);
-    appEventsLogger.logEvent(eventName, bundleParams);
-    result.success(null);
   }
 
-
-  private void logAchieveLevelEvent (String level) {
-    Bundle params = new Bundle();
-    params.putString(AppEventsConstants.EVENT_PARAM_LEVEL, level);
-    appEventsLogger.logEvent(AppEventsConstants.EVENT_NAME_ACHIEVED_LEVEL, params);
+  private void logCompletedRegistration() {
+    appEventsLogger.logEvent(AppEventsConstants.EVENT_NAME_COMPLETED_REGISTRATION);
   }
 
+  private void logCompletedPurchase(MethodCall call) {
+    Map parameters = call.argument("parameters");
+    Double amount = new Double(parameters.get("amount").toString());
+    Currency currency = Currency.getInstance(parameters.get("currency").toString());
+    appEventsLogger.logPurchase(BigDecimal.valueOf(amount), currency);
+  }
 
+  private void setAndHash(MethodCall call) {
+    Map<String,String> parameters = call.argument("parameters");
+    appEventsLogger.setUserData(parameters.get("email"), parameters.get("firstName"), parameters.get("lastName"), parameters.get("phone"), parameters.get("dateOfBirth"), parameters.get("gender"), parameters.get("city"), parameters.get("state"), parameters.get("zip"), parameters.get("country"));
+  }
 
-
+  // Helpers
 
   private Bundle createBundleFromMap(Map paramMap) {
-
     Bundle bundleParams = new Bundle();
-
     Iterator it = paramMap.entrySet().iterator();
     while (it.hasNext()) {
       Map.Entry pair = (Map.Entry)it.next();
@@ -123,8 +128,7 @@ public class FacebookAnalyticsPlugin implements MethodCallHandler {
 
       }
       it.remove();
-
     }
-    return  bundleParams;
+    return bundleParams;
   }
 }
