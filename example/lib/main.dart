@@ -116,7 +116,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _setUserData() async {
-    await FacebookAnalyticsPlugin.setAndHash(
+    await FacebookAnalyticsPlugin.setUserData(
       firstName: "Kimi-Matias",
       lastName: "Räikkönen",
       dateOfBirth: "17.10.1979",

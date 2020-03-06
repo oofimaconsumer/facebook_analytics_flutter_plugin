@@ -26,11 +26,11 @@ class FacebookAnalyticsPlugin {
   /// Logs ...
   static Future<void> logCompletedPurchaseWith({@required double amount, @required String currency}) async {
     await _channel
-        .invokeMethod("logCompletedPurchase", {"amount": amount, "currency": currency});
+        .invokeMethod("logCompletedPurchase", {"parameters": {"amount": amount, "currency": currency}});
   }
 
   /// ...
-  static Future<void> setAndHash({
+  static Future<void> setUserData({
     String email,
     String firstName,
     String lastName,

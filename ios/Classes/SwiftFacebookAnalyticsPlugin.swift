@@ -54,12 +54,12 @@ public class SwiftFacebookAnalyticsPlugin: NSObject, FlutterPlugin {
     }
     
     fileprivate func logCompletedPurchase(with call: FlutterMethodCall) {
-        guard let parameters = call.arguments as? [String : Any], let amount = parameters["amount"] as? Double, let currency = parameters["currency"] as? String else { return }
+        guard let arguments = call.arguments as? [String : Any], let parameters = arguments["parameters"] as? [String : Any], let amount = parameters["amount"] as? Double, let currency = parameters["currency"] as? String else { return }
         AppEvents.logPurchase(amount, currency: currency)
     }
     
     fileprivate func setAndHash(with call: FlutterMethodCall) {
-        guard let parameters = call.arguments as? [String : String] else { return }
+        guard let arguments = call.arguments as? [String : String], let parameters = arguments["parameters"] as? [String : String] else { return }
         AppEvents.setUser(email: parameters["email"], firstName: parameters["firstName"], lastName: parameters["lastName"], phone: parameters["phone"], dateOfBirth: parameters["dateOfBirth"], gender: parameters["gender"], city: parameters["city"], state: parameters["state"], zip: parameters["zip"], country: parameters["country"])
     }
     

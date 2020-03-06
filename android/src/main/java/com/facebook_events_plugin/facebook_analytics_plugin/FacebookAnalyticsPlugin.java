@@ -46,7 +46,7 @@ public class FacebookAnalyticsPlugin implements MethodCallHandler {
 
   @Override
   public void onMethodCall(MethodCall call, Result result) {
-    switch (call.method){
+    switch (call.method) {
       case "logCustomEvent":
         handleLogEvent(call);
         result.success(null);
@@ -66,7 +66,6 @@ public class FacebookAnalyticsPlugin implements MethodCallHandler {
       default:
         result.notImplemented();
     }
-
   }
 
   // Private
